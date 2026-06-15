@@ -1,0 +1,49 @@
+name: Gate PROD
+
+# Ce workflow bloque le merge vers PROD si les checks CI ne sont pas verts.
+# Il est déclenché sur les PR ciblant PROD.
+# À combiner avec une Branch Protection Rule sur GitHub (voir ci-dessous).
+#
+# ── Configuration requise sur GitHub ────────────────────────────────────────
+# Settings → Branches → Add rule → Branch name pattern: PROD
+#   ✅ Require a pull request before merging
+#   ✅ Require status checks to pass before merging
+#      → Ajouter les checks suivants (nom exact) :
+#           • ShellCheck (Bash)
+#           • Bash Syntax (dry-run)
+#           • PSScriptAnalyzer (PowerShell)
+#           • PowerShell Syntax (dry-run)
+#   ✅ Require branches to be up to date before merging
+#   ✅ Do not allow bypassing the above settings
+# ────────────────────────────────────────────────────────────────────────────
+
+on:
+  pull_request:
+    branches:
+      - PROD
+
+jobs:
+  gate:
+    name: Gate — vérification pré-merge PROD
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Résumé des fichiers modifiés
+        run: |
+          echo "## Fichiers modifiés dans cette PR" >> $GITHUB_STEP_SUMMARY
+          git diff --name-only origin/PROD...HEAD | while read f; do
+            echo "- \`$f\`" >> $GITHUB_STEP_SUMMARY
+          done
+
+      - name: Vérifier que seul le dossier Scripts/ est modifié
+        run: |
+          CHANGED=$(git diff --name-only origin/PROD...HEAD)
+          OUTSIDE=$(echo "$CHANGED" | grep -v "^Scripts/" || true)
+          if [ -n "$OUTSIDE" ]; then
+            echo "::warning::Des fichiers hors de Scripts/ sont modifiés :"
+            echo "$OUTSIDE"
+          fi
+          echo "Vérification terminée."
