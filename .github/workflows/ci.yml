@@ -75,9 +75,19 @@ jobs:
       - name: Analyser les scripts .ps1
         shell: pwsh
         run: |
+          # Règles exclues volontairement (scripts de lab) :
+          # - PSAvoidUsingConvertToSecureStringWithPlainText : credentials hardcodés par design
+          # - PSAvoidUsingWriteHost : acceptable pour des scripts de déploiement
+          # - PSUseBOMForUnicodeEncodedFile : encodage BOM non requis dans ce contexte
+          $excludeRules = @(
+            'PSAvoidUsingConvertToSecureStringWithPlainText',
+            'PSAvoidUsingWriteHost',
+            'PSUseBOMForUnicodeEncodedFile'
+          )
+
           $scripts = Get-ChildItem -Path "Scripts\" -Filter "*.ps1"
           $results = $scripts | ForEach-Object {
-            Invoke-ScriptAnalyzer -Path $_.FullName -Severity Warning,Error
+            Invoke-ScriptAnalyzer -Path $_.FullName -Severity Warning,Error -ExcludeRule $excludeRules
           }
 
           if ($results) {
