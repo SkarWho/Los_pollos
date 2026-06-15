@@ -51,10 +51,10 @@ FLUSH PRIVILEGES;
 SQLEOF
 
 # Compilation et installation de guacd
-cd /root
+cd /root || exit
 wget -q https://archive.apache.org/dist/guacamole/${GUAC_VERSION}/source/guacamole-server-${GUAC_VERSION}.tar.gz
 tar -xzf guacamole-server-${GUAC_VERSION}.tar.gz
-cd guacamole-server-${GUAC_VERSION}
+cd guacamole-server-${GUAC_VERSION} || exit
 ./configure --with-init-dir=/etc/init.d
 make && make install
 ldconfig
@@ -71,7 +71,7 @@ systemctl start guacd
 # Tomcat 10 utilise jakarta.servlet, Guacamole 1.5.5 utilise javax.servlet
 # Erreur : NoClassDefFoundError: javax/servlet/ServletContextListener
 # Solution : installer Tomcat 9 manuellement
-cd /opt
+cd /opt || exit
 wget -q https://archive.apache.org/dist/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz
 tar -xzf apache-tomcat-${TOMCAT_VERSION}.tar.gz
 mv apache-tomcat-${TOMCAT_VERSION} tomcat9
@@ -79,7 +79,7 @@ mv apache-tomcat-${TOMCAT_VERSION} tomcat9
 useradd -m -d /opt/tomcat9 -U -s /bin/false tomcat9 2>/dev/null || true
 chown -R tomcat9:tomcat9 /opt/tomcat9
 
-cd /root
+cd /root || exit
 wget -q https://archive.apache.org/dist/guacamole/${GUAC_VERSION}/binary/guacamole-${GUAC_VERSION}.war
 cp guacamole-${GUAC_VERSION}.war ${TOMCAT_DIR}/webapps/guacamole.war
 chown tomcat9:tomcat9 ${TOMCAT_DIR}/webapps/guacamole.war
